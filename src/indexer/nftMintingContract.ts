@@ -1,4 +1,7 @@
-import { nftMintingContract } from "../config/contracts.js";
+import { NFT_ADDRESS, nftMintingContract } from "../config/contracts.js";
+import { upsertNFT } from "../services/nft.service.js";
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export function startNFTTransferListener() {
   console.log("Listening to ERC721 events...");
@@ -7,29 +10,30 @@ export function startNFTTransferListener() {
   nftMintingContract.on(
     "Transfer",
     async (from, to, tokenId, event) => {
-      const isMint =
-        from === "0x0000000000000000000000000000000000000000";
+      const tokenIdStr = tokenId.toString();
+      if(to === ZERO_ADDRESS) return;
 
-      console.log("Transfer", {
-        from,
-        to,
-        tokenId: tokenId.toString(),
-        isMint,
-        txHash: event.transactionHash,
-        blockNumber: event.blockNumber,
+      let tokenURI: string | undefined = undefined;
+      if(from === ZERO_ADDRESS) {
+        try{
+          tokenURI = await nftMintingContract.tokenURI(tokenId);
+        } catch {
+          tokenURI = undefined;
+        }
+      }
+
+      await upsertNFT({
+        contractAddress: NFT_ADDRESS.toLowerCase(),
+        owner: to.toLowerCase(),
+        tokenId: tokenIdStr,
+        tokenURI
       });
-    }
-  );
 
-  // NFTMinted
-  nftMintingContract.on(
-    "NFTMinted",
-    async (minter, tokenId, event) => {
-      console.log("NFTMinted", {
-        minter,
-        tokenId: tokenId.toString(),
+      console.log("Indexed NFT", {
+        tokenId: tokenIdStr,
+        owner: to,
+        isMint: from === ZERO_ADDRESS,
         txHash: event.transactionHash,
-        blockNumber: event.blockNumber,
       });
     }
   );
