@@ -12,7 +12,7 @@ export const marketplaceContract = new Contract(
     provider
 )
 
-export const nftContract = new Contract(
+export const nftMintingContract = new Contract(
     NFT_ADDRESS,
     NFT_CONTRACT_ABI,
     provider
