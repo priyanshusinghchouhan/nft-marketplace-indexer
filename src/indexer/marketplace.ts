@@ -1,4 +1,5 @@
 import { marketplaceContract } from "../config/contracts.js";
+import { createListing, markListingSold, updateListingPrice, cancelListing } from "../services/listing.service.js";
 
 export function startMarketplaceListener() {
     console.log("Listening to Marketplace events.....");
@@ -7,15 +8,15 @@ export function startMarketplaceListener() {
     marketplaceContract.on(
         "NFTListed",
         async(listingId, seller, nftContract, tokenId, price, event) => {
-            console.log("NFTListed", {
+            await createListing({
                 listingId: listingId.toString(),
                 seller,
                 nftContract,
                 tokenId: tokenId.toString(),
                 price: price.toString(),
-                txHash: event.transactionHash,
-                blockNumber: event.blockNumber,
             });
+
+            console.log("Indexed NFTListed: ", listingId.toString());
         }
     );
 
@@ -23,15 +24,9 @@ export function startMarketplaceListener() {
     // "NFTSold"
     marketplaceContract.on(
         "NFTSold",
-        async(listingId, buyer, seller, price, event) => {
-            console.log("NFTSold", {
-                listingId: listingId.toString(),
-                seller,
-                buyer,
-                price: price.toString(),
-                txHash: event.transactionHash,
-                blockNumber: event.blockNumber,
-            });
+        async(listingId) => {
+            await markListingSold(listingId.toString());
+            console.log("Indexed NFTSold: ", listingId.toString());
         }
     );
 
@@ -39,13 +34,9 @@ export function startMarketplaceListener() {
     // "ListingCancelled"
     marketplaceContract.on(
         "ListingCancelled",
-        async(listingId, seller, event) => {
-            console.log("ListingCancelled", {
-                listingId: listingId.toString(),
-                seller,
-                txHash: event.transactionHash,
-                blockNumber: event.blockNumber,
-            });
+        async(listingId) => {
+            await cancelListing(listingId.toString());
+            console.log("Indexed ListingCancelled: ", listingId.toString());
         }
     );
 
@@ -53,13 +44,10 @@ export function startMarketplaceListener() {
     // "ListingPriceUpdated"
     marketplaceContract.on(
         "ListingPriceUpdated",
-        async(listingId, newPrice, event) => {
-            console.log("ListingPriceUpdated", {
-                listingId: listingId.toString(),
-                newPrice: newPrice.toString(),
-                txHash: event.transactionHash,
-                blockNumber: event.blockNumber,
-            });
+        async(listingId, newPrice) => {
+            await updateListingPrice(listingId.toString(), newPrice.toString());
+            console.log("Indexed ListingPriceUpdated: ", listingId.toString());
+
         }
     );
 }
