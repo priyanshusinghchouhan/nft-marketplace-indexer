@@ -5,12 +5,69 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
   provider = "postgresql"
-  url = env("DATABASE_URL")
-  directUrl =  env("DIRECT_DATABASE_URL")
+}
+
+/*
+  NFT minted or transferred on-chain
+*/
+model NFT {
+  id              Int      @id @default(autoincrement())
+  contractAddress String
+  tokenId         String
+  owner           String
+  tokenURI        String?
+  image           String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([contractAddress, tokenId])
+}
+
+/*
+  Marketplace listings derived from events
+*/
+model Listing {
+  id          Int           @id @default(autoincrement())
+  listingId   String        @unique
+  seller      String
+  nftContract String
+  tokenId     String
+  price       String
+  status      ListingStatus
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+/*
+  Unified activity feed (optional but useful)
+*/
+model Activity {
+  id        Int          @id @default(autoincrement())
+  type      ActivityType
+  wallet    String
+  txHash    String
+  createdAt DateTime     @default(now())
+}
+
+enum ListingStatus {
+  ACTIVE
+  SOLD
+  CANCELLED
+}
+
+enum ActivityType {
+  LISTED
+  SOLD
+  CANCELLED
+  PRICE_UPDATED
+  TRANSFER
+  MINTED
 }
