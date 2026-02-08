@@ -47,3 +47,23 @@ export async function updateListingPrice(listingId: string, newPrice: string) {
         data: { price: newPrice },
     });
 }
+
+
+export async function getActiveListing() {
+    return prisma.listing.findMany({
+        where: {
+            status: "ACTIVE",
+        },
+        orderBy: {
+            createdAt: "desc"
+        },
+        select: {
+            listingId: true,
+            seller: true,
+            nftContract: true,
+            tokenId: true,
+            price: true,
+            createdAt: true
+        }
+    });
+}
