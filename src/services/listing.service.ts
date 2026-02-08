@@ -26,7 +26,8 @@ export async function createListing(data: {
 
 
 export async function markListingSold(listingId: string) {
-    return prisma.listing.update({
+    console.log("Peeedddrrrriiii");
+    return prisma.listing.updateMany({
         where: {listingId},
         data: { status: "SOLD"},
     });
@@ -34,14 +35,14 @@ export async function markListingSold(listingId: string) {
 
 
 export async function cancelListing(listingId: string) {
-    return prisma.listing.update({
+    return prisma.listing.updateMany({
         where: {listingId},
         data: { status: "CANCELLED"},
     });
 }
 
 export async function updateListingPrice(listingId: string, newPrice: string) {
-    return prisma.listing.update({
+    return prisma.listing.updateMany({
         where: { listingId },
         data: { price: newPrice },
     });
