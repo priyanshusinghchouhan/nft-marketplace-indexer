@@ -1,9 +1,9 @@
 import "dotenv/config";
-import { marketplaceContract } from "./config/contracts.js";
+import { startIndexer } from "./indexer/index.js";
+
 
 async function main () {
-    const owner = await marketplaceContract.getAddress();
-    console.log("Marketplace Owner: ", owner);
+    await startIndexer();
 }
 
 main();
