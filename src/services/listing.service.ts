@@ -1,4 +1,5 @@
 import { prisma } from "../db/index.js";
+import { ListingStatus } from "@prisma/client";
 
 export async function createListing(data: {
     listingId: string;
@@ -66,4 +67,16 @@ export async function getActiveListing() {
             createdAt: true
         }
     });
+}
+
+export async function getUserListings(wallet:string, status?: ListingStatus) {
+    return prisma.listing.findMany({
+        where: {
+            seller: wallet.toLowerCase(),
+            ...(status ? {status}: {})
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    })
 }
