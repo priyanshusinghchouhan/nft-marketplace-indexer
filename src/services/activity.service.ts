@@ -21,3 +21,15 @@ export async function logActivity({type, wallet,txHash}: {
     },
   });
 }
+
+export async function getRecentActivity(wallet?:string, limit?: number) {
+  return prisma.activity.findMany({
+    where: {
+      ...(wallet ? { wallet: wallet.toLowerCase() } : {}),
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    take: limit
+  });
+}
