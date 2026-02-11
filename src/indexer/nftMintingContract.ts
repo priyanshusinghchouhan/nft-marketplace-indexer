@@ -27,13 +27,13 @@ export function startNFTTransferListener() {
         await logActivity({
           type: "MINTED",
           wallet: to,
-          txHash: event.transactionHash,
+          txHash: event.log.transactionHash,
         });
       } else {
         await logActivity({
           type: "TRANSFER",
           wallet: to,
-          txHash: event.transactionHash,
+          txHash: event.log.transactionHash,
         });
       }
 
@@ -48,7 +48,7 @@ export function startNFTTransferListener() {
         tokenId: tokenIdStr,
         owner: to,
         isMint: from === ZERO_ADDRESS,
-        txHash: event.transactionHash,
+        txHash: event.log.transactionHash,
       });
     },
   );
