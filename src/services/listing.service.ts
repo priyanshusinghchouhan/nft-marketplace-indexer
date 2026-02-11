@@ -27,7 +27,6 @@ export async function createListing(data: {
 
 
 export async function markListingSold(listingId: string) {
-    console.log("Peeedddrrrriiii");
     return prisma.listing.updateMany({
         where: {listingId},
         data: { status: "SOLD"},
