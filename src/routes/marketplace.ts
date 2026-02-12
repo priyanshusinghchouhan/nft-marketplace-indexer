@@ -3,7 +3,7 @@ import { getActiveListing } from "../services/listing.service";
 
 const router = Router();
 
-router.get("/listing", async(req, res) => {
+router.get("/listings", async(req, res) => {
     try {
         const listings = await getActiveListing();
 
