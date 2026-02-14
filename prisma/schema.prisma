@@ -24,6 +24,10 @@ model NFT {
   tokenURI        String?
   image           String?
 
+  lastUpdatedBlock    Int?
+  lastUpdatedLogIndex Int?
+  lastUpdatedTxHash   String?
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
@@ -41,6 +45,10 @@ model Listing {
   tokenId     String
   price       String
   status      ListingStatus
+
+  lastUpdatedBlock    Int?
+  lastUpdatedLogIndex Int?
+  lastUpdatedTxHash   String?
 
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
