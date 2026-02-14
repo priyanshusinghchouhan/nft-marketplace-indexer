@@ -1,70 +1,99 @@
 import { prisma } from "../db";
 
 export async function upsertNFT(data: {
-    contractAddress: string;
-    tokenId: string;
-    owner: string;
-    tokenURI?: string
+  contractAddress: string;
+  tokenId: string;
+  owner: string;
+  tokenURI?: string;
+  blockNumber: number;
+  logIndex: number;
+  txHash: string;
 }) {
-    return prisma.nFT.upsert({
-        where: {
-            contractAddress_tokenId: {
-                contractAddress: data.contractAddress,
-                tokenId: data.tokenId,
-            }
+  const existing = await prisma.nFT.findUnique({
+    where: {
+      contractAddress_tokenId: {
+        contractAddress: data.contractAddress,
+        tokenId: data.tokenId,
+      },
+    },
+  });
+
+  if (existing) {
+    if (
+      existing.lastUpdatedBlock !== null &&
+      (existing.lastUpdatedBlock > data.blockNumber ||
+        (existing.lastUpdatedBlock === data.blockNumber &&
+          (existing.lastUpdatedLogIndex ?? 0) >= data.logIndex))
+    ) {
+      return existing;
+    }
+
+    return prisma.nFT.update({
+      where: {
+        contractAddress_tokenId: {
+          contractAddress: data.contractAddress,
+          tokenId: data.tokenId,
         },
-        update: {
-          owner: data.owner.toLowerCase(),
-          tokenURI: data.tokenURI,
-        },
-        create : {
-            contractAddress: data.contractAddress,
-            tokenId: data.tokenId,
-            owner: data.owner.toLowerCase(),
-            tokenURI: data.tokenURI
-        }
+      },
+      data: {
+        owner: data.owner.toLowerCase(),
+        tokenURI: data.tokenURI,
+        lastUpdatedTxHash: data.txHash,
+        lastUpdatedBlock: data.blockNumber,
+        lastUpdatedLogIndex: data.logIndex,
+      }
     });
+  }
+
+  return prisma.nFT.create({
+    data: {
+      contractAddress: data.contractAddress,
+      tokenId: data.tokenId,
+      owner: data.owner.toLowerCase(),
+      tokenURI: data.tokenURI,
+      lastUpdatedTxHash: data.txHash,
+      lastUpdatedBlock: data.blockNumber,
+      lastUpdatedLogIndex: data.logIndex,
+    },
+  });
 }
 
-
 export async function getNFTsByOwner(wallet: string) {
-    const owner = wallet.toLowerCase();
+  const owner = wallet.toLowerCase();
 
-    const nfts = await prisma.nFT.findMany({
-        where: {
-            owner,
-        },
-        select: {
-            tokenId: true,
-            contractAddress: true,
-            tokenURI: true
-        }
-    });
+  const nfts = await prisma.nFT.findMany({
+    where: {
+      owner,
+    },
+    select: {
+      tokenId: true,
+      contractAddress: true,
+      tokenURI: true,
+    },
+  });
 
-    const listings = await prisma.listing.findMany({
-        where: {
-            seller: owner,
-            status: "ACTIVE",
-        },
-        select: {
-            listingId: true,
-            tokenId: true,
-            price: true,
-        }
-    });
+  const listings = await prisma.listing.findMany({
+    where: {
+      seller: owner,
+      status: "ACTIVE",
+    },
+    select: {
+      listingId: true,
+      tokenId: true,
+      price: true,
+    },
+  });
 
-    const listingMaps = new Map(
-        listings.map((l) => [l.tokenId, l])
-    );
+  const listingMaps = new Map(listings.map((l) => [l.tokenId, l]));
 
-    return nfts.map((nft) => {
-        const listing = listingMaps.get(nft.tokenId);
+  return nfts.map((nft) => {
+    const listing = listingMaps.get(nft.tokenId);
 
-        return {
-           ...nft,
-           listed: Boolean(listing),
-           listingId: listing?.listingId,
-           price: listing?.price,
-        }
-    });
+    return {
+      ...nft,
+      listed: Boolean(listing),
+      listingId: listing?.listingId,
+      price: listing?.price,
+    };
+  });
 }
