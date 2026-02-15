@@ -24,24 +24,30 @@ async function safeQueryFilter(filter: any, from: number, to: number, retries = 
   }
 }
 
+export async function backFillERC721TransfersFromBlock(
+  fromBlock: number,
+  toBlock?: number,
+): Promise<void> {
+  const endBlock = toBlock ?? (await provider.getBlockNumber());
 
-async function backFillERC721Transfers() {
-  console.log("Starting ERC-721 Backfill.....");
+  if (fromBlock > endBlock) {
+    console.log("NFT gap-fill: no blocks to process.");
+    return;
+  }
 
-  const latestBlock = await provider.getBlockNumber();
-  console.log("Latest block: ", latestBlock);
+  console.log(`ERC-721 backfill: ${fromBlock} -> ${endBlock}`);
 
-  let fromBlock = START_BLOCK;
+  let current = fromBlock;
 
-  while (fromBlock <= latestBlock) {
-    const toBlock = Math.min(fromBlock + CHUNK_SIZE - 1, latestBlock);
+  while (current <= endBlock) {
+    const chunkEnd = Math.min(current + CHUNK_SIZE - 1, endBlock);
 
-    console.log(`Fetching Transfer events from ${fromBlock} - ${toBlock}`);
+    console.log(`Fetching Transfer events from ${current} - ${chunkEnd}`);
 
     const events = await safeQueryFilter(
       nftMintingContract.filters.Transfer(),
-      fromBlock,
-      toBlock,
+      current,
+      chunkEnd,
     );
 
     const sortedEvents = events.sort((a, b) => {
@@ -89,15 +95,25 @@ async function backFillERC721Transfers() {
     }
 
     await new Promise(res => setTimeout(res, 500));
-    fromBlock = toBlock + 1;
+    current = chunkEnd + 1;
   }
 
   console.log("ERC-721 Backfill complete");
 }
 
-backFillERC721Transfers()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("Backfill failed", err);
-    process.exit(1);
-  });
+async function backFillERC721Transfers() {
+  const latestBlock = await provider.getBlockNumber();
+  await backFillERC721TransfersFromBlock(START_BLOCK, latestBlock);
+}
+
+const isRunDirectly =
+  typeof require !== "undefined" && require.main === module;
+
+if (isRunDirectly) {
+  backFillERC721Transfers()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("Backfill failed", err);
+      process.exit(1);
+    });
+}
