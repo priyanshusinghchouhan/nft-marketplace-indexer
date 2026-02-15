@@ -24,7 +24,12 @@ app.use("/activity", activityRoutes);
 
 
 async function main () {
-    await startIndexer();
+    try{
+        await startIndexer();
+    }catch(error){
+        console.error("Error starting indexer", error);
+        process.exit(1);
+    }
 }
 
 main();
