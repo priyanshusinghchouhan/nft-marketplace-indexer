@@ -9,18 +9,22 @@ export function startMarketplaceListener() {
     "NFTListed",
     async (listingId, seller, nftContract, tokenId, price, event) => {
       try {
+        const { blockNumber, index: logIndex, transactionHash: txHash } = event.log;
         await createListing({
           listingId: listingId.toString(),
           seller: seller.toLowerCase(),
           nftContract: nftContract.toLowerCase(),
           tokenId: tokenId.toString(),
           price: price.toString(),
+          blockNumber,
+          logIndex,
+          txHash,
         });
 
         await logActivity({
           type: "LISTED",
           wallet: seller.toLowerCase(),
-          txHash: event.log.transactionHash,
+          txHash,
         });
 
         console.log("Indexed NFTListed:", listingId.toString());
@@ -34,12 +38,13 @@ export function startMarketplaceListener() {
     "NFTSold",
     async (listingId, buyer, seller, price, event) => {
       try {
-        await markListingSold(listingId.toString());
+        const { blockNumber, index: logIndex, transactionHash: txHash } = event.log;
+        await markListingSold(listingId.toString(), blockNumber, logIndex, txHash);
 
         await logActivity({
           type: "SOLD",
           wallet: buyer.toLowerCase(),
-          txHash: event.log.transactionHash,
+          txHash,
         });
 
         console.log("Indexed NFTSold:", listingId.toString());
@@ -53,12 +58,13 @@ export function startMarketplaceListener() {
     "ListingCancelled",
     async (listingId, seller, event) => {
       try {
-        await cancelListing(listingId.toString());
+        const { blockNumber, index: logIndex, transactionHash: txHash } = event.log;
+        await cancelListing(listingId.toString(), blockNumber, logIndex, txHash);
 
         await logActivity({
           type: "CANCELLED",
           wallet: seller.toLowerCase(),
-          txHash: event.log.transactionHash,
+          txHash,
         });
 
         console.log("Indexed ListingCancelled:", listingId.toString());
@@ -72,7 +78,8 @@ export function startMarketplaceListener() {
     "ListingPriceUpdated",
     async (listingId, newPrice, event) => {
       try {
-        await updateListingPrice(listingId.toString(), newPrice.toString());
+        const { blockNumber, index: logIndex, transactionHash: txHash } = event.log;
+        await updateListingPrice(listingId.toString(), newPrice.toString(), blockNumber, logIndex, txHash);
 
         console.log("Indexed ListingPriceUpdated:", listingId.toString());
       } catch (e) {
