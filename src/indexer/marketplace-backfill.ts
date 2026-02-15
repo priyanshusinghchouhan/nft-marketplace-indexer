@@ -25,41 +25,48 @@ async function safeQueryFilter(filter: any, from: number, to: number, retries = 
   }
 }
 
-async function backfillMarketplace() {
-  console.log("Starting Marketplace Backfill...");
+export async function backfillMarketplaceFromBlock(
+  fromBlock: number,
+  toBlock?: number,
+): Promise<void> {
+  const endBlock = toBlock ?? (await provider.getBlockNumber());
 
-  const latestBlock = await provider.getBlockNumber();
-  console.log("Latest block:", latestBlock);
+  if (fromBlock > endBlock) {
+    console.log("Marketplace gap-fill: no blocks to process.");
+    return;
+  }
 
-  let fromBlock = START_BLOCK;
+  console.log(`Marketplace backfill: ${fromBlock} -> ${endBlock}`);
 
-  while (fromBlock <= latestBlock) {
-    const toBlock = Math.min(fromBlock + CHUNK_SIZE - 1, latestBlock);
+  let current = fromBlock;
 
-    console.log(`Fetching events from ${fromBlock} - ${toBlock}`);
+  while (current <= endBlock) {
+    const chunkEnd = Math.min(current + CHUNK_SIZE - 1, endBlock);
+
+    console.log(`Fetching events from ${current} - ${chunkEnd}`);
 
     const listedEvents = await safeQueryFilter(
       marketplaceContract.filters.NFTListed(),
-      fromBlock,
-      toBlock,
+      current,
+      chunkEnd,
     );
 
     const soldEvents = await safeQueryFilter(
       marketplaceContract.filters.NFTSold(),
-      fromBlock,
-      toBlock,
+      current,
+      chunkEnd,
     );
 
     const cancelledEvents = await safeQueryFilter(
       marketplaceContract.filters.ListingCancelled(),
-      fromBlock,
-      toBlock,
+      current,
+      chunkEnd,
     );
 
     const priceUpdatedEvents = await safeQueryFilter(
       marketplaceContract.filters.ListingPriceUpdated(),
-      fromBlock,
-      toBlock,
+      current,
+      chunkEnd,
     );
 
     const events = [
@@ -70,7 +77,7 @@ async function backfillMarketplace() {
     ];
 
     if (events.length === 0) {
-      fromBlock = toBlock + 1;
+      current = chunkEnd + 1;
       continue;
     }
 
@@ -150,15 +157,25 @@ async function backfillMarketplace() {
     }
 
     await new Promise(res => setTimeout(res, 500));
-    fromBlock = toBlock + 1;
+    current = chunkEnd + 1;
   }
 
   console.log("Marketplace Backfill Complete.");
 }
 
-backfillMarketplace()
-  .then(() => process.exit(0))
-  .catch((err) => {
-    console.error("Backfill failed:", err);
-    process.exit(1);
-  });
+async function backfillMarketplace() {
+  const latestBlock = await provider.getBlockNumber();
+  await backfillMarketplaceFromBlock(START_BLOCK, latestBlock);
+}
+
+const isRunDirectly =
+  typeof require !== "undefined" && require.main === module;
+
+if (isRunDirectly) {
+  backfillMarketplace()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error("Backfill failed:", err);
+      process.exit(1);
+    });
+}
