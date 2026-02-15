@@ -14,6 +14,8 @@ export function startNFTTransferListener() {
       const tokenIdStr = tokenId.toString();
       if (to.toLowerCase() === ZERO_ADDRESS) return;
 
+      const { blockNumber, index: logIndex, transactionHash: txHash } = event.log;
+
       let tokenURI: string | undefined = undefined;
       if (from === ZERO_ADDRESS) {
         try {
@@ -27,13 +29,13 @@ export function startNFTTransferListener() {
         await logActivity({
           type: "MINTED",
           wallet: to,
-          txHash: event.log.transactionHash,
+          txHash,
         });
       } else {
         await logActivity({
           type: "TRANSFER",
           wallet: to,
-          txHash: event.log.transactionHash,
+          txHash,
         });
       }
 
@@ -42,13 +44,16 @@ export function startNFTTransferListener() {
         owner: to.toLowerCase(),
         tokenId: tokenIdStr,
         tokenURI,
+        blockNumber,
+        logIndex,
+        txHash,
       });
 
       console.log("Indexed NFT", {
         tokenId: tokenIdStr,
         owner: to,
         isMint: from === ZERO_ADDRESS,
-        txHash: event.log.transactionHash,
+        txHash,
       });
     },
   );
