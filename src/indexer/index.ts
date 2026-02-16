@@ -10,7 +10,7 @@ import { backFillERC721TransfersFromBlock } from "./nft-contract-backfill.js";
 import { startMarketplaceListener } from "./marketplace.js";
 import { startNFTTransferListener } from "./nftMintingContract.js";
 
-const MAX_GAP_BLOCKS = 20000;
+const MAX_GAP_BLOCKS = 2000;
 
 async function runGapFill() {
   const latestBlock = await provider.getBlockNumber();
