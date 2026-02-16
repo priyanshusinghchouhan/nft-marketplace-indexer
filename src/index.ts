@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { startIndexer } from "./indexer/index.js";
-import marketplaceRoutes from "../src/routes/marketplace.js";
-import userRoutes from "../src/routes/users.js";
-import activityRoutes from "../src/routes/activity.js";
+import marketplaceRoutes from "./routes/marketplace.js";
+import userRoutes from "./routes/users.js";
+import activityRoutes from "./routes/activity.js";
 import  express  from "express";
 import cors from "cors";
 
