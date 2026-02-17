@@ -9,9 +9,14 @@ import cors from "cors";
 const app = express();
 const PORT = process.env.PORT || 5173;
 
-app.use( cors ({
-    origin: process.env.FRONTEND_URL || "*"
-}))
+app.use(cors({
+    origin: [
+        'https://nft-marketplace-chi-red.vercel.app',
+        'http://localhost:3000',
+        'http://localhost:5173'
+    ],
+    credentials: true
+}));
 
 
 
