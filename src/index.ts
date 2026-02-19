@@ -13,7 +13,8 @@ app.use(cors({
     origin: [
         'https://nft-marketplace-chi-red.vercel.app',
         'http://localhost:3000',
-        'http://localhost:5173'
+        'http://localhost:5173',
+        'https://marketplace.priyanshuchouhan.xyz'
     ],
     credentials: true
 }));
