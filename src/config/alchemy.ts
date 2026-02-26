@@ -1,5 +1,3 @@
-import { JsonRpcProvider } from "ethers";
+import { WebSocketProvider } from "ethers";
 
-export const provider = new JsonRpcProvider(
-    process.env.ALCHEMY_RPC
-);
+export const provider = new WebSocketProvider(process.env.ALCHEMY_RPC!);
